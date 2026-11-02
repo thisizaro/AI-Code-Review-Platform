@@ -7,7 +7,7 @@ from dataclasses import dataclass
 class Settings:
     provider: str = "groq"
     groq_api_key: str = ""
-    groq_model: str = "llama-3.3-70b-versatile"
+    groq_model: str = "openai/gpt-oss-120b"
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.0-flash"
     retry_backoff_seconds: float = 1.0
