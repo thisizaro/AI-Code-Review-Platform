@@ -1,0 +1,24 @@
+# secrets
+.env
+*.env.local
+
+# node
+node_modules/
+dist/
+
+# java
+target/
+.gradle/
+build/
+*.class
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# editors / os
+.idea/
+.vscode/
+.DS_Store
