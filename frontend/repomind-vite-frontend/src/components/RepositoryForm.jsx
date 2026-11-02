@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Github, ArrowRight } from "lucide-react";
+import { normalizeRepoUrl } from "../utils/repoUrl";
 
 export default function RepositoryForm({ onSubmit, loading = false, buttonText = "Analyze repository" }) {
   const [url, setUrl] = useState("");
@@ -7,13 +8,13 @@ export default function RepositoryForm({ onSubmit, loading = false, buttonText =
 
   function handleSubmit(event) {
     event.preventDefault();
-    const value = url.trim();
-    if (!/^https:\/\/github\.com\/[^/]+\/[^/]+\/?$/.test(value)) {
+    const normalized = normalizeRepoUrl(url);
+    if (!normalized) {
       setError("Enter a valid public GitHub repository URL (https://github.com/owner/repository).");
       return;
     }
     setError("");
-    onSubmit(value.replace(/\/$/, ""));
+    onSubmit(normalized);
   }
 
   return (

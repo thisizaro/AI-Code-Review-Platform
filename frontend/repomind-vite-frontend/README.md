@@ -25,7 +25,12 @@ Expected endpoints:
 - `POST /matching/analyze` with `{ "repository_url": "...", "job_description": "..." }`
 - `POST /learning/ask` with `{ "repository_url": "...", "question": "..." }`
 
-The UI includes demo fallback data when the backend is unavailable, so the pages can be explored before backend integration. Demo results are explicitly labelled.
+If the backend is unreachable the UI shows an error message (there is no demo data).
+
+## Test
+```bash
+npm test
+```
 
 ## Build
 ```bash

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { askProjectQuestion } from "../services/api";
+import { normalizeRepoUrl } from "../utils/repoUrl";
 import PageHeader from "../components/PageHeader";
 import { Bot, Send, UserRound, BookOpen, AlertCircle } from "lucide-react";
 
@@ -14,16 +15,17 @@ export default function ProjectLearning() {
 
   async function submit(event) {
     event.preventDefault();
-    if (!repo.trim() || !question.trim()) { setError("Enter a repository URL and a question."); return; }
+    const repoUrl = normalizeRepoUrl(repo);
+    if (!repoUrl || !question.trim()) { setError("Enter a valid GitHub repository URL and a question."); return; }
     const prompt = question.trim();
     setMessages(prev => [...prev, { role: "user", content: prompt }]);
-    setQuestion(""); setLoading(true); setError(""); setRepositoryUrl(repo.trim());
+    setQuestion(""); setLoading(true); setError(""); setRepositoryUrl(repoUrl);
     try {
-      const response = await askProjectQuestion(repo.trim(), prompt);
+      const response = await askProjectQuestion(repoUrl, prompt);
       const answer = response.answer || response.response || response.message || JSON.stringify(response, null, 2);
       setMessages(prev => [...prev, { role: "assistant", content: answer, sources: response.sources || [] }]);
     } catch (err) {
-      setError(`${err.message}. The learning service must be running to answer repository-specific questions.`);
+      setError(err.message);
     } finally { setLoading(false); }
   }
 

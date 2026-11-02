@@ -1,11 +1,22 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api").replace(/\/$/, "");
 
+const REQUEST_TIMEOUT_MS = 90000;
+
 async function post(endpoint, payload) {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+    });
+  } catch (err) {
+    if (err?.name === "TimeoutError" || err?.name === "AbortError") {
+      throw new Error("The request took too long. Please try again.");
+    }
+    throw new Error("Cannot reach the API. Make sure the backend is running.");
+  }
 
   const contentType = response.headers.get("content-type") || "";
   const data = contentType.includes("application/json")

@@ -7,34 +7,19 @@ import ScoreRing from "../components/ScoreRing";
 import EmptyState from "../components/EmptyState";
 import { AlertTriangle, ShieldAlert, Code2, RefreshCw } from "lucide-react";
 
-const demoResult = {
-  quality_score: 78,
-  issues: [
-    { severity: "Medium", title: "Function complexity is high", file: "src/services/parser.py", detail: "Consider extracting conditional branches into smaller functions." },
-    { severity: "Low", title: "Duplicate logic detected", file: "src/utils/helpers.py", detail: "Similar logic appears in another utility function." }
-  ],
-  security_findings: [
-    { severity: "High", title: "Review input validation", file: "src/api/routes.py", detail: "Validate and sanitize untrusted input at the API boundary." }
-  ],
-  metrics: { files_analyzed: 42, functions_analyzed: 118, test_files: 9 }
-};
-
 export default function RepositoryAnalysis() {
   const { repositoryUrl, setRepositoryUrl, analysisResult, setAnalysisResult } = useApp();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isDemo, setIsDemo] = useState(false);
 
   async function runAnalysis(url) {
     setRepositoryUrl(url);
-    setLoading(true); setError(""); setIsDemo(false);
+    setLoading(true); setError(""); setAnalysisResult(null);
     try {
       const result = await analyzeRepository(url);
       setAnalysisResult(result);
     } catch (err) {
-      setError(`${err.message}. Showing clearly labelled sample data so you can preview the interface.`);
-      setAnalysisResult(demoResult);
-      setIsDemo(true);
+      setError(err.message);
     } finally { setLoading(false); }
   }
 
@@ -50,7 +35,8 @@ export default function RepositoryAnalysis() {
       </section>
       {loading && <div className="loading-panel"><div className="spinner"></div><strong>Analyzing repository…</strong><span>Collecting code metrics and review findings.</span></div>}
       {result && !loading && <>
-        <div className="result-heading"><div><h2>Analysis results</h2><p>Review the findings below and validate them against the source code.</p></div>{isDemo && <span className="demo-tag">DEMO DATA</span>}</div>
+        <div className="result-heading"><div><h2>Analysis results</h2><p>Review the findings below and validate them against the source code.</p></div></div>
+        {result.metrics?.truncated && <div className="notice notice-warning"><AlertTriangle size={17} />This repository is large, so only part of it was analyzed (file size and count limits apply).</div>}
         <section className="analysis-summary">
           <div className="panel score-panel"><ScoreRing score={result.quality_score ?? result.qualityScore ?? 0} label="Quality" size={132} /><div><h3>Code quality</h3><p>Composite score returned by the analysis service. Confirm its calculation and scoring rubric in the backend.</p></div></div>
           <div className="panel mini-metrics">

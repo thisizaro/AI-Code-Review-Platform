@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useApp } from "../context/AppContext";
 import { analyzeJobMatch } from "../services/api";
+import { normalizeRepoUrl } from "../utils/repoUrl";
 import PageHeader from "../components/PageHeader";
 import ScoreRing from "../components/ScoreRing";
 import { BriefcaseBusiness, Sparkles, AlertCircle } from "lucide-react";
-
-const demo = { match_score: 76, matched_skills: ["Python", "REST APIs", "Machine Learning", "SQL"], missing_skills: ["Kubernetes", "AWS"], explanation: "The repository demonstrates several skills relevant to the role. The missing skills indicate limited evidence in the inspected repository, not necessarily a lack of candidate ability." };
 
 export default function JDMatching() {
   const { repositoryUrl, setRepositoryUrl, matchingResult, setMatchingResult } = useApp();
@@ -13,14 +12,14 @@ export default function JDMatching() {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isDemo, setIsDemo] = useState(false);
 
   async function submit(event) {
     event.preventDefault();
-    if (!url.trim() || !description.trim()) { setError("Provide both a GitHub repository URL and a job description."); return; }
-    setLoading(true); setError(""); setIsDemo(false); setRepositoryUrl(url.trim());
-    try { setMatchingResult(await analyzeJobMatch(url.trim(), description.trim())); }
-    catch (err) { setMatchingResult(demo); setIsDemo(true); setError(`${err.message}. Displaying sample data for preview.`); }
+    const repo = normalizeRepoUrl(url);
+    if (!repo || !description.trim()) { setError("Provide a valid GitHub repository URL and a job description."); return; }
+    setLoading(true); setError(""); setMatchingResult(null); setRepositoryUrl(repo);
+    try { setMatchingResult(await analyzeJobMatch(repo, description.trim())); }
+    catch (err) { setError(err.message); }
     finally { setLoading(false); }
   }
 
@@ -38,7 +37,7 @@ export default function JDMatching() {
     </section>
     {loading && <div className="loading-panel"><div className="spinner"></div><strong>Evaluating repository evidence…</strong></div>}
     {result && !loading && <section className="panel">
-      <div className="section-heading"><div><h2>Match assessment</h2><p>Evidence-based alignment with the supplied job description.</p></div>{isDemo && <span className="demo-tag">DEMO DATA</span>}</div>
+      <div className="section-heading"><div><h2>Match assessment</h2><p>Evidence-based alignment with the supplied job description.</p></div></div>
       <div className="match-overview"><ScoreRing score={result.match_score ?? result.score ?? 0} label="Match" size={132} /><div><h3>Repository-to-role alignment</h3><p>{result.explanation || result.summary || "Review the matched and missing skills as repository evidence, not as a complete assessment of the candidate."}</p></div></div>
       <div className="skill-columns"><SkillList title="Skills evidenced" values={result.matched_skills || []} kind="matched" /><SkillList title="Skills not evidenced" values={result.missing_skills || []} kind="missing" /></div>
       <div className="notice notice-info"><BriefcaseBusiness size={17} />This score is an assistive signal, not a hiring decision. Repository evidence is incomplete and should be reviewed alongside interviews and other relevant information.</div>
